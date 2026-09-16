@@ -1,0 +1,80 @@
+import { useState } from "react";
+import { LoginForm } from "./components/login-form";
+import { useNavigate } from "react-router";
+import axios from "axios";
+import { toast,Toaster } from "react-hot-toast";
+
+export default function Login() {
+  const [inputValue, setInputValue] = useState({
+    email: "",
+    password: "",
+  });
+  const [isLoading,setIsLoading] = useState(false);
+  const { email, password } = inputValue;
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!email || !password) {
+      handleError("All feilds are required!");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { data } = await axios.post(
+        "http://localhost:8080/login",
+        { ...inputValue },
+        {
+          withCredentials: true,
+        },
+      );
+
+      console.log(data);
+      const { success, message } = data;
+
+      if (success) {
+        handleSuccess(message);
+
+        setTimeout(() => {
+          navigate("/");
+        }, 3000);
+      } else {
+        handleError(message);
+      }
+    } catch (err) {
+      console.log(err.message);
+      handleError(err.response?.data?.message || "Something went wrong!");
+    }finally{
+      setIsLoading(false);
+    }
+  };
+
+  const handleSuccess = (msg) => {
+    toast.success(msg, { position: "top-right" });
+  };
+
+  const handleError = (err) => {
+    toast.error(err, { position: "top-right" });
+  };
+
+  return (
+    <>
+      <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 bg-[url('./assets/background1.jpg')]">
+      <Toaster/>
+        <div className="w-full max-w-sm">
+          <p>{email}</p>
+          <p>{password}</p>
+          <LoginForm
+            inputValue={inputValue}
+            setInputValue={setInputValue}
+            handleSubmit={handleSubmit}
+            isLoading={isLoading}
+          />
+        </div>
+      </div>
+    </>
+  );
+}
