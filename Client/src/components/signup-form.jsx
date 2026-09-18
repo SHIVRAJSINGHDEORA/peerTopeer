@@ -13,15 +13,62 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import axios from "axios";
+import { useState, useEffect } from "react";
 import { Link } from "react-router";
+import { CircleCheck, CircleX } from "lucide-react";
 
-export function SignupForm({ inputValue, setInputValue, ...props }) {
+export function SignupForm({ inputValue, setInputValue,isLoading,handleSubmit, ...props }) {
   const handleInputValue = (e) => {
     const { id, value } = e.target;
     setInputValue({ ...inputValue, [id]: value });
+    if(id == 'password' && value.length < 8){
+      setConfirmPass("");
+      setPassMatch(null);
+    }
   };
 
-  const {email,username,password} = inputValue;
+  const [isValid, setIsValid] = useState(null);
+  const [confirmPass, setConfirmPass] = useState("");
+  const [passMatch, setPassMatch] = useState(null);
+  const { email, username, password } = inputValue;
+
+  useEffect(() => {
+    if (!username) {
+      setIsValid(null);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await axios.get(
+          "http://localhost:8080/check-username",
+          { params: { username } },
+          { withCredentials: true },
+        );
+
+        setIsValid(data.available);
+      } catch (err) {
+        console.log(err.message);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [username]);
+
+  const handleConfirmPass = (e) => {
+    setConfirmPass(e.target.value);
+    if (e.target.value === password) {
+      setPassMatch(true);
+    } else {
+      setPassMatch(false);
+    }
+  };
 
   return (
     <Card {...props}>
@@ -29,7 +76,7 @@ export function SignupForm({ inputValue, setInputValue, ...props }) {
         <CardTitle className={"text-center "}>Sign Up</CardTitle>
       </CardHeader>
       <CardContent>
-        <form>
+        <form onSubmit={handleSubmit}>
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -43,16 +90,21 @@ export function SignupForm({ inputValue, setInputValue, ...props }) {
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="username">
-                Username
-              </FieldLabel>
-              <Input
-                id="username"
-                type="username"
-                required
-                value={username}
-                onChange={handleInputValue}
-              />
+              <FieldLabel htmlFor="username">Username</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="username"
+                  type="username"
+                  placeholder="@samayhoonme"
+                  required
+                  value={username}
+                  onChange={handleInputValue}
+                />
+                <InputGroupAddon align="inline-end">
+                  {isValid == true && <CircleCheck color="#11ff00" />}
+                  {isValid == false && <CircleX color="#F87171" />}
+                </InputGroupAddon>
+              </InputGroup>
             </Field>
             <Field>
               <FieldLabel htmlFor="password">Password</FieldLabel>
@@ -72,11 +124,16 @@ export function SignupForm({ inputValue, setInputValue, ...props }) {
                 Confirm Password
               </FieldLabel>
               <Input
+                className={`
+                  ${passMatch === false && " focus-visible:border-red-400 focus-visible:ring-red-400/50"}
+                  ${passMatch === true && " focus-visible:border-green-500 focus-visible:ring-green-500/50"}
+                `}
                 id="confirm-password"
                 type="password"
+                disabled={password.length < 8}
                 required
-                value={password}
-                onChange={handleInputValue}
+                value={confirmPass}
+                onChange={handleConfirmPass}
               />
               <FieldDescription>Please confirm your password.</FieldDescription>
             </Field>

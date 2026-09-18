@@ -2,14 +2,15 @@ import { useState } from "react";
 import { LoginForm } from "./components/login-form";
 import { useNavigate } from "react-router";
 import axios from "axios";
-import { toast,Toaster } from "react-hot-toast";
+import { toast } from "sonner"
+import { showToast } from "./components/customToast";
 
 export default function Login() {
   const [inputValue, setInputValue] = useState({
     email: "",
     password: "",
   });
-  const [isLoading,setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { email, password } = inputValue;
   const navigate = useNavigate();
 
@@ -39,6 +40,7 @@ export default function Login() {
         handleSuccess(message);
 
         setTimeout(() => {
+          toast.dismiss();
           navigate("/");
         }, 3000);
       } else {
@@ -47,26 +49,24 @@ export default function Login() {
     } catch (err) {
       console.log(err.message);
       handleError(err.response?.data?.message || "Something went wrong!");
-    }finally{
+    } finally {
       setIsLoading(false);
     }
   };
 
   const handleSuccess = (msg) => {
-    toast.success(msg, { position: "top-right" });
+    showToast(msg, "success", "top-right");
   };
 
   const handleError = (err) => {
-    toast.error(err, { position: "top-right" });
+    showToast(err, "error", "top-right");
   };
 
   return (
     <>
       <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 bg-[url('./assets/background1.jpg')]">
-      <Toaster/>
+       
         <div className="w-full max-w-sm">
-          <p>{email}</p>
-          <p>{password}</p>
           <LoginForm
             inputValue={inputValue}
             setInputValue={setInputValue}

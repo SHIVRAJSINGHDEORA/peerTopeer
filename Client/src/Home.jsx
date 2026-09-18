@@ -9,8 +9,9 @@ import meetIlus from "./assets/meetingilustrator.svg";
 import { useState, startTransition, useEffect } from "react";
 import { Spotify } from "./Spotify";
 import Media from "./components/Media";
-import { toast, Toaster } from "react-hot-toast";
+
 import axios from "axios";
+import { showToast } from "./components/customToast";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ export default function Home() {
       const { data } = await axios.post(
         "http://localhost:8080/logout",
         {},
-        { withCredentials : true },
+        { withCredentials: true },
       );
 
       console.log(data);
@@ -73,11 +74,11 @@ export default function Home() {
   };
 
   const handleSuccess = (msg) => {
-    toast.success(msg);
+    showToast(msg, "success", "top-center");
   };
 
   const handleError = (err) => {
-    toast.error(err, { position: "bottom-right" });
+    showToast(err, "error", "bottom-right");
   };
 
   const handleClick = (e) => {
@@ -100,7 +101,6 @@ export default function Home() {
     <>
       <div className="min-h-screen w-full ">
         <Navbar isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
-        <Toaster />
         <div className="pt-20">
           <div className="flex h-100 w-full p-4">
             <div className="flex-1 flex flex-col justify-start gap-10 p-4 border-r text-center">

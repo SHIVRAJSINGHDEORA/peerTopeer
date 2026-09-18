@@ -6,8 +6,6 @@ import {User} from "../Models/UserModel.js";
 export function userVerification(req, res) {
   const token = req.cookies.token;
 
-  console.log(token);
-
   if (!token) {
     return res.json({ status: false });
   }
