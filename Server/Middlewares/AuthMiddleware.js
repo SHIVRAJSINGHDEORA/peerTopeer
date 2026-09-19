@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 dotenv.config();
-import {User} from "../Models/UserModel.js";
+import { User } from "../Models/UserModel.js";
 
 export function userVerification(req, res) {
   const token = req.cookies.token;

@@ -10,7 +10,7 @@ import micOff from "./assets/microphone-slash-solid-full.svg";
 import phone from "./assets/phone-solid-full.svg"
 import meetIlus from "./assets/meetingilustrator.svg";
 import info from "./assets/info2.svg"
-import Time from "./Time";
+import Time from "./components/Time";
 
 export default function VideoCallSetup() {
   const params = useParams();

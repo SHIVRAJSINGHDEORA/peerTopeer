@@ -7,79 +7,17 @@ import meetlogo from "./assets/google-meet.svg";
 import pluslogo from "./assets/plus.svg";
 import meetIlus from "./assets/meetingilustrator.svg";
 import { useState, startTransition, useEffect } from "react";
-import { Spotify } from "./Spotify";
+import { Spotify } from "./components/Spotify";
 import Media from "./components/Media";
+import { useAuth } from "./AuthContext";
 
-import axios from "axios";
-import { showToast } from "./components/customToast";
+
 
 export default function Home() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("null");
   const [generatedId, setGeneratedId] = useState("xxxxxxxxxxx");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const verifyUser = async () => {
-      try {
-        const { data } = await axios.post(
-          "http://localhost:8080/",
-          {},
-          {
-            withCredentials: true,
-          },
-        );
-
-        console.log(data);
-        const { status, user } = data;
-
-        if (status) {
-          handleSuccess(`Welcome back ${user}`);
-          setIsLoggedIn(true);
-        } else {
-          handleError("Sign up to access !");
-          navigate("/login");
-        }
-      } catch (err) {
-        console.log(err.message);
-        handleError(err.response?.data?.message || "Something went wrong!");
-      }
-    };
-
-    verifyUser();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      const { data } = await axios.post(
-        "http://localhost:8080/logout",
-        {},
-        { withCredentials: true },
-      );
-
-      console.log(data);
-      const { success, message } = data;
-      if (success) {
-        handleSuccess(message);
-        setTimeout(() => {
-          navigate("/login");
-        }, 1000);
-      } else {
-        handleError(message);
-      }
-    } catch (err) {
-      console.log(err.message);
-      handleError(err.response?.data?.message || "Something went wrong!");
-    }
-  };
-
-  const handleSuccess = (msg) => {
-    showToast(msg, "success", "top-center");
-  };
-
-  const handleError = (err) => {
-    showToast(err, "error", "bottom-right");
-  };
+  const {isAuthenticated} = useAuth();
 
   const handleClick = (e) => {
     const page = e.target.name;
@@ -100,7 +38,6 @@ export default function Home() {
   return (
     <>
       <div className="min-h-screen w-full ">
-        <Navbar isLoggedIn={isLoggedIn} handleLogout={handleLogout} />
         <div className="pt-20">
           <div className="flex h-100 w-full p-4">
             <div className="flex-1 flex flex-col justify-start gap-10 p-4 border-r text-center">

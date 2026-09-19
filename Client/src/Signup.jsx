@@ -42,7 +42,7 @@ export default function Signup() {
 
         setTimeout(() => {
           toast.dismiss();
-          navigate("/");
+          navigate("/home");
         }, 1000);
       } else {
         handleError(message);

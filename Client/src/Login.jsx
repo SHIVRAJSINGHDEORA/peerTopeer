@@ -41,7 +41,7 @@ export default function Login() {
 
         setTimeout(() => {
           toast.dismiss();
-          navigate("/");
+          navigate("/home");
         }, 3000);
       } else {
         handleError(message);
