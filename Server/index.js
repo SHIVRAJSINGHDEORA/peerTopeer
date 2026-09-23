@@ -34,6 +34,8 @@ app.use(cors({
 }));
 
 import {router as AuthRouter} from "./Routes/AuthRouter.js";
+import {router as MeetRouter} from "./Routes/MeetRouter.js";
 
 
 app.use("/",AuthRouter);
+app.use("/video-call/",MeetRouter);

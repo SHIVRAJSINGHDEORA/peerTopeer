@@ -3,22 +3,27 @@ import dotenv from "dotenv";
 dotenv.config();
 import { User } from "../Models/UserModel.js";
 
-export function userVerification(req, res) {
+export function verifyUser(req, res, next) {
   const token = req.cookies.token;
 
   if (!token) {
-    return res.json({ status: false });
+    return res.status(401).json({ status: false });
   }
 
   const secretString = process.env.SECRET;
 
   jwt.verify(token, secretString, async (err, data) => {
     if (err) {
-      return res.json({ status: false });
-    } else {
-      const user = await User.findById(data.id);
-      if (user) return res.json({ status: true, user: user.username });
-      else return res.json({ status: false });
+      return res.status(401).json({ status: false });
     }
+
+    const user = await User.findById(data.id);
+
+    if (!user) {
+      return res.status(401).json({ status: false });
+    }
+
+    req.user = user;
+    next();
   });
 }

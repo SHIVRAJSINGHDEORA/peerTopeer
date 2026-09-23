@@ -1,6 +1,29 @@
 import bcrypt from "bcrypt";
 import { User } from "../Models/UserModel.js";
 import { createSecretToken } from "../Utils/SecretToken.js";
+import dotenv from "dotenv";
+dotenv.config();
+import jwt from "jsonwebtoken";
+
+const userVerification = (req, res)=> {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ status: false });
+  }
+
+  const secretString = process.env.SECRET;
+
+  jwt.verify(token, secretString, async (err, data) => {
+    if (err) {
+      return res.status(401).json({ status: false });
+    } else {
+      const user = await User.findById(data.id);
+      if (user) return res.json({ status: true, user: user.username });
+      else return res.status(401).json({ status: false });
+    }
+  });
+}
 
 const Signup = async (req, res) => {
   try {
@@ -88,4 +111,4 @@ const Logout = (req, res) => {
 
 
 
-export { Signup, Login,Logout };
+export { Signup, Login,Logout ,userVerification};

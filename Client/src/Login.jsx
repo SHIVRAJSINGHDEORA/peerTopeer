@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import axios from "axios";
 import { toast } from "sonner"
 import { showToast } from "./components/customToast";
+import { useAuth } from "./AuthContext";
 
 export default function Login() {
   const [inputValue, setInputValue] = useState({
@@ -13,6 +14,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { email, password } = inputValue;
   const navigate = useNavigate();
+  const {setIsAuthenticated} = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,9 +40,10 @@ export default function Login() {
 
       if (success) {
         handleSuccess(message);
-
+        setIsAuthenticated(true);
         setTimeout(() => {
           toast.dismiss();
+          
           navigate("/home");
         }, 3000);
       } else {

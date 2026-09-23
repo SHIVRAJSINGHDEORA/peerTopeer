@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, loading }}>
+    <AuthContext.Provider value={{ isAuthenticated, loading,setIsAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,6 @@
-import { Signup, Login, Logout } from "../Controllers/AuthController.js";
+import { Signup, Login, Logout,userVerification } from "../Controllers/AuthController.js";
 import { User } from "../Models/UserModel.js";
 import express from "express";
-import { userVerification } from "../Middlewares/AuthMiddleware.js";
 const router = express.Router({ caseSensitive: true, strict: true });
 
 router

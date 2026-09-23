@@ -11,6 +11,7 @@ export default function Navbar() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const path = location.pathname.toLowerCase();
+  const {setIsAuthenticated} = useAuth();
 
   const hideNavbar =
     path === "/login" || path === "/signup" || path.startsWith("/video-call");
@@ -31,6 +32,7 @@ export default function Navbar() {
       const { success, message } = data;
       if (success) {
         handleSuccess(message);
+        setIsAuthenticated(true);
         setTimeout(() => {
           navigate("/login");
         }, 1000);
