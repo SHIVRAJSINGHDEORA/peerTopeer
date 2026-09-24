@@ -1,23 +1,21 @@
 import { Button } from "./components/ui/button";
 import { Field } from "./components/ui/field";
 import { Input } from "./components/ui/input";
-import { Navigate, useNavigate } from "react-router";
-import Navbar from "./Navbar";
+import { useNavigate } from "react-router";
 import meetlogo from "./assets/google-meet.svg";
 import pluslogo from "./assets/plus.svg";
 import meetIlus from "./assets/meetingilustrator.svg";
 import { useState, startTransition, useEffect } from "react";
 import { Spotify } from "./components/Spotify";
-import Media from "./components/Media";
 import { useAuth } from "./AuthContext";
-
-
+import axios from "axios";
+import { showToast } from "./components/customToast";
 
 export default function Home() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("null");
   const [generatedId, setGeneratedId] = useState("xxxxxxxxxxx");
-  const {isAuthenticated} = useAuth();
+  const { isAuthenticated } = useAuth();
 
   const handleClick = (e) => {
     const page = e.target.name;
@@ -33,6 +31,26 @@ export default function Home() {
     startTransition(() => {
       setMode(mode);
     });
+  };
+
+  const handleCreateMeet = async () => {
+    try {
+      const { data } = await axios.post(
+        "http://localhost:8080/video-call/meetings",
+        {},
+        { withCredentials: true },
+      );
+      console.log(data);
+      const { id } = data;
+      navigate(`/video-call/setup/${id}`);
+    } catch (err) {
+      console.log(err.message);
+      handleError(err.response?.data?.message || "Something went wrong!");
+    }
+  };
+
+  const handleError = (err) => {
+    showToast(err, "error", "top-right");
   };
 
   return (
@@ -110,7 +128,9 @@ export default function Home() {
                     {mode == "meet" && (
                       <div className="w-full flex flex-col items-center">
                         <div className="flex gap-8">
-                          <Button>Generate New ID</Button>
+                          <Button onClick={handleCreateMeet}>
+                            Generate New ID
+                          </Button>
                           <Button>Use Personal ID</Button>
                         </div>
                       </div>

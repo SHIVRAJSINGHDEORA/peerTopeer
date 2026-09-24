@@ -4,23 +4,24 @@ import webcamOff from "../assets/video-slash-solid-full.svg";
 import mic from "../assets/microphone-solid-full.svg";
 import micOff from "../assets/microphone-slash-solid-full.svg";
 import phone from "../assets/phone-solid-full.svg";
+import { useMedia } from "@/MediaContext";
 
-export function CallControl({
-  cameras,
-  mics,
-  selectedCamera,
-  selectedMic,
-  cameraEnabled,
-  micEnabled,
-  stream,
-  getPermission,
-  onCameraChange,
-  onMicChange,
-  onCameraEnabledChange,
-  onMicEnabledChange,
-  onJoin,
-  onEnd,
-}) {
+export function CallControl({onJoin,onEnd}) {
+  const {
+    cameras,
+    mics,
+    selectedCamera,
+    selectedMic,
+    cameraEnabled,
+    micEnabled,
+    stream,
+    getPermission,
+    setCameraEnabled,
+    setMicEnabled,
+    handleCameraChange,
+    handleMicChange,
+  } = useMedia();
+
   const toggleCamera = async () => {
     if (!stream) {
       const newStream = await getPermission();
@@ -28,7 +29,7 @@ export function CallControl({
       newStream.getVideoTracks().forEach((track) => {
         track.enabled = true;
       });
-      onCameraEnabledChange(true);
+      setCameraEnabled(true);
       return;
     }
     const newEnabled = !cameraEnabled;
@@ -37,7 +38,7 @@ export function CallControl({
       track.enabled = newEnabled;
     });
 
-    onCameraEnabledChange(newEnabled);
+    setCameraEnabled(newEnabled);
   };
 
   const toggleMic = async () => {
@@ -47,7 +48,7 @@ export function CallControl({
       newStream.getAudioTracks().forEach((track) => {
         track.enabled = true;
       });
-      onMicEnabledChange(true);
+      setMicEnabled(true);
       return;
     } else {
       const newEnabled = !micEnabled;
@@ -56,7 +57,7 @@ export function CallControl({
         track.enabled = newEnabled;
       });
 
-      onMicEnabledChange(newEnabled);
+      setMicEnabled(newEnabled);
     }
   };
 
@@ -68,7 +69,7 @@ export function CallControl({
         <MediaSelector
           devices={mics}
           selectedDevice={selectedMic}
-          onMediaChange={onMicChange}
+          onMediaChange={handleMicChange}
           disabled={!stream || !micEnabled}
         />
         <button
@@ -96,7 +97,7 @@ export function CallControl({
         <MediaSelector
           devices={cameras}
           selectedDevice={selectedCamera}
-          onMediaChange={onCameraChange}
+          onMediaChange={handleCameraChange}
           disabled={!stream || !cameraEnabled}
         />
         <button
@@ -140,7 +141,7 @@ export function CallControl({
                       ease-out active:scale-95 focus:outline-none"
         >
           <img
-            className="h-8 w-8 rotate-[135deg] object-contain"
+            className="h-8 w-8 rotate-135 object-contain"
             src={phone}
             alt=""
           />

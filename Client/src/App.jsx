@@ -6,7 +6,10 @@ import VideoCallSetup from "./VideoCallSetup";
 import { Toaster } from "sonner";
 import ProtectedRoute from "./ProtectedRoute";
 import { AuthProvider } from "./AuthContext";
+import { MediaProvider } from "./MediaContext";
 import Navbar from "./Navbar";
+import { VideoCallLayout } from "./VideoCallLayout";
+import VideoCallRoom from "./VideoCallRoom";
 
 function App() {
   return (
@@ -20,10 +23,16 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/home" element={<Home />} />
-              <Route
-                path="/video-call/setup/:id"
-                element={<VideoCallSetup />}
-              />
+              <Route element={<VideoCallLayout />}>
+                <Route
+                  path="/video-call/setup/:id"
+                  element={<VideoCallSetup />}
+                />
+                <Route
+                  path="/video-call/room/:id"
+                  element={<VideoCallRoom />}
+                />
+              </Route>
             </Route>
           </Routes>
         </AuthProvider>

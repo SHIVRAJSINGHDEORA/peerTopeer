@@ -7,7 +7,7 @@ const verifyMeet = async (req, res,next) => {
     const meet = await Meet.findOne({ meetId: meetId });
 
     if (!meet) {
-      return res.status(404).json({ message: "No Call Found", status: false });
+      return res.status(404).json({ message: "No Call Exists", status: false });
     }
 
     req.meet = meet;
