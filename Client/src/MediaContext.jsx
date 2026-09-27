@@ -32,7 +32,7 @@ export function MediaProvider({ children }) {
 
   const getPermission = async () => {
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const newStream = await navigator.mediaDevices.getUserMedia({video : true,audio : true});
       setStream(newStream);
 
       const videoTrack = newStream.getVideoTracks()[0];
@@ -68,7 +68,7 @@ export function MediaProvider({ children }) {
 
       return newStream;
     } catch (err) {
-      console.log("Permission Error : ", err.message);
+      console.log("Permission Error : ", err);
       return null;
     }
   };

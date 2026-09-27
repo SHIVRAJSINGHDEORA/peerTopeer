@@ -1,45 +1,50 @@
 import { useMedia } from "@/MediaContext";
 import { VideoTile } from "./VideoTile";
-import { useEffect, useRef } from "react";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"; // Adjust path if needed
+import { useEffect, useRef, memo, useState,useCallback } from "react";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-function Video({ stream, muted = false }) {
+function ThumbnailVideo({ stream }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
+    const videoEl = videoRef.current;
+    if (!videoEl || !stream) return;
+
+    // Only assign if the source actually changed to avoid buffer resets
+    if (videoEl.srcObject !== stream) {
+      videoEl.srcObject = stream;
     }
+
+    videoEl.play().catch((err) => {
+      if (err.name !== "AbortError") console.error(err);
+    });
+
+    return () => {
+      if (videoEl) videoEl.srcObject = null;
+    };
   }, [stream]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-2xl bg-black">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted={muted}
-        controls={false}
-        className="absolute inset-0 h-full w-full rounded-2xl object-cover"
-      />
-    </div>
+    <video
+      ref={videoRef}
+      autoPlay
+      playsInline
+      muted
+      className="h-full w-full rounded-xl object-cover"
+    />
   );
 }
 
-export function VideoGrid() {
-  const { cameraEnabled, stream } = useMedia();
-
-  const participants = [
-    { id: 1, stream: stream },
-    { id: 2, stream: stream },
-    { id: 3, stream: stream },
-    { id: 4, stream: stream },
-    { id: 2, stream: stream },
-    { id: 3, stream: stream },
-    { id: 4, stream: stream },
-  ];
-
+const ParticipantsThumbnail = memo(function participantsThumbnainl({
+  isActive,
+  participant,
+  muted = false,
+  onSelect
+}) {
   const videoRef = useRef(null);
+  const id = participant.id;
+  const cameraEnabled = participant.cameraEnabled;
+  const stream = participant.stream;
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -47,32 +52,78 @@ export function VideoGrid() {
     }
   }, [stream]);
 
+  const isLive = cameraEnabled && !!stream;
+
   return (
-    <div className="flex h-[calc(100vh-10rem)] w-full min-h-0 flex-col gap-4 lg:flex-row">
-      
-      {/* Main Video Tile */}
-      <div className="min-w-0 flex-1 lg:min-h-0">
-        <VideoTile cameraEnabled={cameraEnabled} videoRef={videoRef} />
+    <div className="relative h-full w-full overflow-hidden rounded-2xl bg-black" onClick={()=>onSelect(id)}>
+      {isActive || !isLive ? (
+        <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-black">
+          <div className="absolute inset-0 bg-purple-500/40 blur-3xl" />
+          <div className="relative flex flex-col items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-700 text-xs font-semibold text-white">
+              {id.charAt(0).toUpperCase()}
+            </div>
+            <span className="text-sm text-white">{id}</span>
+          </div>
+        </div>
+      ) : (
+        <ThumbnailVideo stream={stream}/>
+      )}
+    </div>
+  );
+});
+
+export function VideoGrid({ user, host }) {
+  const { cameraEnabled, stream } = useMedia();
+  const [activeUserId, setActiveUserId] = useState(null);
+
+  const participants = [
+    { id: "abugadh", cameraEnabled: cameraEnabled, stream: stream },
+    { id: "laila", cameraEnabled: cameraEnabled, stream: stream },
+  ];
+
+  useEffect(() => {
+    if (!activeUserId && (host?.id || user?.id)) {
+      setActiveUserId(host?.id ?? user?.id);
+    }
+  }, [host?.id, user?.id, activeUserId]);
+
+  const currentTargetId = activeUserId ?? host?.id ?? user?.id;
+  const activeUser =
+    participants.find((p) => p.id === currentTargetId) || participants[0];
+
+  const handleSelect = useCallback((id) => {
+    setActiveUserId(id);
+  }, []);
+
+  return (
+    <div className="flex flex-1 h-full  min-h-0 flex-col gap-2 sm:gap-4 lg:flex-row">
+      <div className="relative flex-1 min-h-0 min-w-0 w-full h-full overflow-hidden rounded-2xl">
+        <VideoTile
+          cameraEnabled={activeUser?.cameraEnabled}
+          stream={activeUser?.stream}
+          isLocal={activeUser?.id == user.id}
+          name={activeUser?.id}
+        />
       </div>
 
-      {/* Shadcn ScrollArea Wrapper */}
-      <ScrollArea className="w-full shrink-0 rounded-2xl overflow-hidden bg-zinc-800 lg:h-full lg:w-[220px]">
-        {/* Inner layout container controls the flex direction */}
-        <div className="flex w-full flex-row gap-2 px-4 py-2 lg:flex-col">
+      <ScrollArea className=" w-max max-w-full self-center shrink-0 rounded-2xl overflow-hidden bg-zinc-800 lg:h-full lg:w-55">
+        <div className="flex flex-row gap-2 px-4 py-2 lg:w-full lg:flex-col">
           {participants.map((participant, index) => (
             <div
-              key={`${participant.id}-${index}`}
-              className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-zinc-950 p-1 sm:h-28 sm:w-28 lg:h-28 lg:w-full lg:p-2"
+              key={index}
+              className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl ${participant.id == activeUserId ? "border-2 border-yellow-500/60" : ""} bg-zinc-950 p-1 sm:h-24 sm:w-24 lg:h-28 lg:w-full lg:p-2`}
             >
-              <Video stream={participant.stream} />
+              <ParticipantsThumbnail
+                participant={participant}
+                isActive={participant.id == activeUserId}
+                onSelect={handleSelect}
+              />
             </div>
           ))}
         </div>
-        
-        {/* Radix/Shadcn requires explicit horizontal scrollbars if you want dual-axis routing */}
         <ScrollBar orientation="horizontal" className="lg:hidden" />
       </ScrollArea>
-      
     </div>
   );
 }

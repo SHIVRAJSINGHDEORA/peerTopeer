@@ -11,12 +11,12 @@ import { useMedia } from "./MediaContext";
 export default function VideoCallSetup() {
   const params = useParams();
   const id = params.id;
-  const [Id, setId] = useState(null);
-  const [host, setHost] = useState(null);
+  const [meetData, setMeetData] = useState({ Id: "", user: "", host: "" });
 
   const navigate = useNavigate();
 
   const {cameraEnabled,stream,setStream,setCameraEnabled,setMicEnabled} = useMedia();
+  const {Id,user,host} = meetData;
 
   useEffect(() => {
     const getMeet = async () => {
@@ -28,8 +28,7 @@ export default function VideoCallSetup() {
 
         console.log(data);
         const { meetId, user, host } = data;
-        setId(meetId);
-        setHost(host);
+        setMeetData({Id : meetId,user : user, host : host});
       } catch (err) {
         console.log(err.message);
         handleError(err.response?.data?.message || "Something went wrong!");
@@ -44,13 +43,6 @@ export default function VideoCallSetup() {
     showToast(err, "error", "top-right");
   };
 
-  const videoRef = useRef(null);
-
-  useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
 
 
   const endCall = () => {
@@ -68,7 +60,7 @@ export default function VideoCallSetup() {
   };
 
   const joinCall = () =>{
-    navigate(`/video-call/room/${id}`);
+    navigate(`/video-call/room/${Id}`);
   }
 
   return (
@@ -84,7 +76,7 @@ export default function VideoCallSetup() {
           </div>
           <Time />
         </div>
-        <VideoTile cameraEnabled={cameraEnabled} videoRef={videoRef} />
+        <VideoTile cameraEnabled={cameraEnabled} stream={stream} isLocal={true} name={user}/>
         <CallControl
           onJoin={joinCall}
           onEnd={endCall}

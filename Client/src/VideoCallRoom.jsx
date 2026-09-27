@@ -12,12 +12,13 @@ import { VideoGrid } from "./components/VideoGrid";
 export default function VideoCallRoom() {
   const params = useParams();
   const id = params.id;
-  const [Id, setId] = useState(null);
-  const [host, setHost] = useState(null);
+  const [meetData, setMeetData] = useState({ Id: "", user: "", host: "" });
 
   const navigate = useNavigate();
 
-  const {cameraEnabled,stream,setStream,setCameraEnabled,setMicEnabled} = useMedia();
+  const { cameraEnabled, stream, setStream, setCameraEnabled, setMicEnabled } =
+    useMedia();
+  const { Id, user, host } = meetData;
 
   useEffect(() => {
     const getMeet = async () => {
@@ -29,8 +30,12 @@ export default function VideoCallRoom() {
 
         console.log(data);
         const { meetId, user, host } = data;
-        setId(meetId);
-        setHost(host);
+        setMeetData((prev) => ({
+          ...prev,
+          Id: meetId,
+          user: user,
+          host: host,
+        }));
       } catch (err) {
         console.log(err.message);
         handleError(err.response?.data?.message || "Something went wrong!");
@@ -52,7 +57,6 @@ export default function VideoCallRoom() {
       videoRef.current.srcObject = stream;
     }
   }, [stream]);
-
 
   const endCall = () => {
     if (stream) {
@@ -81,11 +85,10 @@ export default function VideoCallRoom() {
           </div>
           <Time />
         </div>
-        <VideoGrid/>
-        <CallControl
-          onJoin={endCall}
-          onEnd={endCall}
-        />
+        <VideoGrid user={{ id: user }} />
+        <div className="shrink-0 pb-3 sm:pb-0">
+          <CallControl onJoin={endCall} onEnd={endCall} />
+        </div>
       </div>
     </div>
   );
