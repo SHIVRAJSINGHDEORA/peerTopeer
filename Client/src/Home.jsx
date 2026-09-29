@@ -14,7 +14,7 @@ import { showToast } from "./components/customToast";
 export default function Home() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("null");
-  const [generatedId, setGeneratedId] = useState("xxxxxxxxxxx");
+  const [joinId, setJoinId] = useState("");
   const { isAuthenticated } = useAuth();
 
   const handleClick = (e) => {
@@ -22,6 +22,10 @@ export default function Home() {
     console.log(page);
 
     navigate(`/${page}`);
+  };
+
+  const handleChange = (e) => {
+    setJoinId(e.target.value);
   };
 
   const handleMode = (e) => {
@@ -51,6 +55,21 @@ export default function Home() {
 
   const handleError = (err) => {
     showToast(err, "error", "top-right");
+  };
+
+  const handleJoinMeet = async () => {
+    try {
+      const { data } = await axios.get(`http://localhost:8080/video-call/${joinId}`, {
+        withCredentials: true,
+      });
+
+      console.log(data);
+      const { meetId } = data;
+      navigate(`/video-call/setup/${meetId}`);
+    } catch (err) {
+      console.log(err.message);
+      handleError(err.response?.data?.message || "Something went wrong!");
+    }
   };
 
   return (
@@ -118,10 +137,12 @@ export default function Home() {
                       <div className="w-full">
                         <Field orientation="horizontal">
                           <Input
-                            type="search"
+                            type="text"
                             placeholder="Enter Unique Id..."
+                            value={joinId}
+                            onChange={handleChange}
                           />
-                          <Button>Join</Button>
+                          <Button onClick={handleJoinMeet}>Join</Button>
                         </Field>
                       </div>
                     )}{" "}

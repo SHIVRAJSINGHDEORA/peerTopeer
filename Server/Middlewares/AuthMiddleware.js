@@ -5,7 +5,7 @@ import { User } from "../Models/UserModel.js";
 
 export function verifyUser(req, res, next) {
   const token = req.cookies.token;
-
+  
   if (!token) {
     return res.status(401).json({ status: false });
   }

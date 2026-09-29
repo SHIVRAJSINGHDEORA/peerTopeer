@@ -1,35 +1,38 @@
-import { createContext, useEffect, useContext, useRef, useState } from "react";
+import { createContext, useEffect, useContext, useRef, useState,useMemo } from "react";
 import { io } from "socket.io-client";
 // import { showToast } from "./components/customToast.js";
 
 export const SocketContext = createContext();
 
 export function SocketProvider({ children }) {
-  const socketRef = useRef(null);
-  const [socket, setSocket] = useState(socketRef.current);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    if(!socketRef.current){
-        socketRef.current = io("http://localhost:8080");
-        setSocket(socketRef.current);
-    }
-    socket.on("connect", () => {
-      console.log(socket.id);
+    const newSocket = io("http://localhost:8080",{withCredentials : true});
+
+    setSocket(newSocket);
+
+    newSocket.on("connect", () => {
+      console.log(newSocket.id);
     });
 
-    socket.on("connect_error", (err) => {
+    newSocket.on("connect_error", (err) => {
       console.log(err);
-      // handleError(err.message);
+      navigate("/home");
     });
-  }, [socketRef.current]);
 
-  //   const handleError = (err) => {
-  //     showToast(err, "error", "top-right");
-  //   };
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+ 
 
   return (
     <>
-      <SocketContext.Provider value={{socket}}>{children}</SocketContext.Provider>
+      <SocketContext.Provider value={{socket}}>
+        {children}
+      </SocketContext.Provider>
     </>
   );
 }

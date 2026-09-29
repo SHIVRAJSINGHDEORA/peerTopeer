@@ -25,6 +25,17 @@ export function MediaProvider({ children }) {
     },
   };
 
+  const stopMedia = () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => {
+        track.stop();
+      });
+      setStream(null);
+      setCameraEnabled(false);
+      setMicEnabled(false);
+    }
+  };
+
   const getConnectedDevices = async (type) => {
     const devices = await navigator.mediaDevices.enumerateDevices();
     return devices.filter((device) => device.kind == type);
@@ -32,7 +43,10 @@ export function MediaProvider({ children }) {
 
   const getPermission = async () => {
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({video : true,audio : true});
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
       setStream(newStream);
 
       const videoTrack = newStream.getVideoTracks()[0];
@@ -189,6 +203,7 @@ export function MediaProvider({ children }) {
         setMicEnabled,
         handleCameraChange,
         handleMicChange,
+        stopMedia,
       }}
     >
       {children}
