@@ -5,6 +5,7 @@ import info from "./assets/info2.svg";
 import Time from "./components/Time";
 import { VideoTile } from "./components/VideoTile";
 import axios from "axios";
+import { io } from "socket.io-client";
 import { showToast } from "./components/customToast";
 import { useMedia } from "./MediaContext";
 
@@ -12,15 +13,15 @@ export default function VideoCallSetup() {
   const params = useParams();
   const id = params.id;
   const [meetData, setMeetData] = useState({ Id: "", user: "", host: "" });
-
   const navigate = useNavigate();
-
-  const {cameraEnabled,stream,setStream,setCameraEnabled,setMicEnabled} = useMedia();
-  const {Id,user,host} = meetData;
+  const { cameraEnabled, stream, setStream, setCameraEnabled, setMicEnabled } =
+    useMedia();
+  const { Id, user, host } = meetData;
 
   useEffect(() => {
     const getMeet = async () => {
       try {
+
         const { data } = await axios.get(
           `http://localhost:8080/video-call/${id}`,
           { withCredentials: true },
@@ -28,7 +29,7 @@ export default function VideoCallSetup() {
 
         console.log(data);
         const { meetId, user, host } = data;
-        setMeetData({Id : meetId,user : user, host : host});
+        setMeetData({ Id: meetId, user: user, host: host });
       } catch (err) {
         console.log(err.message);
         handleError(err.response?.data?.message || "Something went wrong!");
@@ -42,8 +43,6 @@ export default function VideoCallSetup() {
   const handleError = (err) => {
     showToast(err, "error", "top-right");
   };
-
-
 
   const endCall = () => {
     if (stream) {
@@ -59,9 +58,9 @@ export default function VideoCallSetup() {
     }
   };
 
-  const joinCall = () =>{
+  const joinCall = () => {
     navigate(`/video-call/room/${Id}`);
-  }
+  };
 
   return (
     <div className="h-screen w-full overflow-hidden p-3 pb-0 sm:p-4">
@@ -76,11 +75,13 @@ export default function VideoCallSetup() {
           </div>
           <Time />
         </div>
-        <VideoTile cameraEnabled={cameraEnabled} stream={stream} isLocal={true} name={user}/>
-        <CallControl
-          onJoin={joinCall}
-          onEnd={endCall}
+        <VideoTile
+          cameraEnabled={cameraEnabled}
+          stream={stream}
+          isLocal={true}
+          name={user}
         />
+        <CallControl onJoin={joinCall} onEnd={endCall} />
       </div>
     </div>
   );
