@@ -10,7 +10,7 @@ import { MediaProvider } from "./MediaContext";
 import Navbar from "./Navbar";
 import { VideoCallLayout } from "./VideoCallLayout";
 import VideoCallRoom from "./VideoCallRoom";
-
+import VideoCallSocketLayout from "./VideoCallSocketLayout";
 
 function App() {
   return (
@@ -24,15 +24,17 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/home" element={<Home />} />
-              <Route element={<VideoCallLayout />}>
-                <Route
-                  path="/video-call/setup/:id"
-                  element={<VideoCallSetup />}
-                />
-                <Route
-                  path="/video-call/room/:id"
-                  element={<VideoCallRoom />}
-                />
+              <Route element={<VideoCallSocketLayout/>}>
+                <Route element={<VideoCallLayout />}>
+                  <Route
+                    path="/video-call/setup/:id"
+                    element={<VideoCallSetup />}
+                  />
+                  <Route
+                    path="/video-call/room/:id"
+                    element={<VideoCallRoom />}
+                  />
+                </Route>
               </Route>
             </Route>
           </Routes>
