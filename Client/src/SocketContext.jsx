@@ -13,9 +13,8 @@ export const SocketContext = createContext();
 
 export function SocketProvider({ children }) {
   const [socket, setSocket] = useState(null);
-  const [connected, setConnected] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState("Something went wrong!");
+  const [err, setErr] = useState(null);
+  const [status, setStatus] = useState("connecting");
 
   useEffect(() => {
     const newSocket = io("http://localhost:8080", { withCredentials: true });
@@ -24,15 +23,13 @@ export function SocketProvider({ children }) {
 
     newSocket.on("connect", () => {
       console.log(newSocket.id);
-      setConnected(true);
-      setLoading(false);
+      setStatus("connected");
     });
 
     newSocket.on("connect_error", (err) => {
       console.log(err);
-      setErr(err);
-      setConnected(false);
-      setLoading(false);
+      setErr(err.message || "something went wrong!");
+      setStatus("Failed");
     });
 
     return () => {
@@ -43,7 +40,7 @@ export function SocketProvider({ children }) {
 
   return (
     <>
-      <SocketContext.Provider value={{ socket , connected, loading, err}}>
+      <SocketContext.Provider value={{ socket ,err, status}}>
         {children}
       </SocketContext.Provider>
     </>

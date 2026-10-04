@@ -50,14 +50,6 @@ export default function VideoCallRoom() {
     showToast(err, "error", "top-right");
   };
 
-  const videoRef = useRef(null);
-
-  useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
-
   const endCall = () => {
     if (stream) {
       stream.getTracks().forEach((track) => {

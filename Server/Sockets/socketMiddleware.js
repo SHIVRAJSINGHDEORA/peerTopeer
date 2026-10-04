@@ -6,7 +6,7 @@ import { User } from "../Models/UserModel.js";
 export function verifyUser(socket, next) {
 
   const token = socket.request.cookies.token;
-  
+
   if (!token) {
     const err = new Error("not authorized");
     err.data = { content: { status: false } };
@@ -34,9 +34,11 @@ export function verifyUser(socket, next) {
       return;
     }
 
-    console.log(user);
+    
 
     socket.data.username = user.username;
     next();
   });
 }
+
+

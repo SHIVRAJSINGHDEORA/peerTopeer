@@ -46,7 +46,7 @@ export default function Navbar() {
   };
 
   const handleSuccess = (msg) => {
-    showToast(msg, "success", "top-center");
+    showToast(msg, "success", "top-right");
   };
 
   const handleError = (err) => {

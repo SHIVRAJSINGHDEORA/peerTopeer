@@ -1,12 +1,12 @@
 import { cn } from "cn"
-import { Loader2Icon } from "lucide-react"
+import { Loader2Icon,Loader } from "lucide-react"
 
 function Spinner({
   className,
   ...props
 }) {
   return (
-    <Loader2Icon
+    <Loader
       data-slot="spinner"
       role="status"
       aria-label="Loading"

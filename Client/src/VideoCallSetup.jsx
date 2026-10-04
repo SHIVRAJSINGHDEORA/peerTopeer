@@ -14,12 +14,15 @@ export default function VideoCallSetup() {
   const id = params.id;
   const [meetData, setMeetData] = useState({ Id: "", user: "", host: "" });
   const navigate = useNavigate();
-  const { cameraEnabled, stream, setStream, setCameraEnabled, setMicEnabled,stopMedia } =
-    useMedia();
+  const {
+    cameraEnabled,
+    stream,
+    stopMedia,
+  } = useMedia();
   const { Id, user, host } = meetData;
-  const {socket} = useSocket();
+  const { socket } = useSocket();
 
-  console.log(socket);
+  console.log(socket.connected);
 
   useEffect(() => {
     const getMeet = async () => {
@@ -32,9 +35,6 @@ export default function VideoCallSetup() {
         console.log(data);
         const { meetId, user, host } = data;
         setMeetData({ Id: meetId, user: user, host: host });
-
-        socket.emit("join-room",meetId);
-
       } catch (err) {
         console.log(err.message);
         handleError(err.response?.data?.message || "Something went wrong!");
@@ -42,23 +42,35 @@ export default function VideoCallSetup() {
       }
     };
 
-    if(socket){
-      getMeet();
-    }
-  }, [socket]);
+    getMeet();
+  }, []);
 
   const handleError = (err) => {
     showToast(err, "error", "top-right");
   };
 
   const endCall = () => {
-      stopMedia();
-      navigate("/");
-    
+    stopMedia();
+    navigate("/");
   };
 
   const joinCall = () => {
-    navigate(`/video-call/room/${Id}`);
+    if (socket?.connected) {
+      socket.emit("join-room", Id, (res)=>{
+        console.log(res);
+        const {success, message} = res;
+        
+        if(!success){
+          handleError(message);
+          navigate("/home");
+          return;
+        }
+        navigate(`/video-call/room/${Id}`);
+        
+      });
+      return;
+    }
+    navigate("/home");
   };
 
   return (

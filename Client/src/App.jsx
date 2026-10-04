@@ -11,29 +11,32 @@ import Navbar from "./Navbar";
 import { VideoCallLayout } from "./VideoCallLayout";
 import VideoCallRoom from "./VideoCallRoom";
 import VideoCallSocketLayout from "./VideoCallSocketLayout";
+import RoomGuard from "./RoomGuard";
 
 function App() {
   return (
     <>
       <BrowserRouter>
         <AuthProvider>
-          <Toaster />
           <Navbar />
+          <Toaster />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/home" element={<Home />} />
-              <Route element={<VideoCallSocketLayout/>}>
+              <Route element={<VideoCallSocketLayout />}>
                 <Route element={<VideoCallLayout />}>
                   <Route
                     path="/video-call/setup/:id"
                     element={<VideoCallSetup />}
                   />
-                  <Route
-                    path="/video-call/room/:id"
-                    element={<VideoCallRoom />}
-                  />
+                  <Route element={<RoomGuard />}>
+                    <Route
+                      path="/video-call/room/:id"
+                      element={<VideoCallRoom />}
+                    />
+                  </Route>
                 </Route>
               </Route>
             </Route>
