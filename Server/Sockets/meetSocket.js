@@ -28,21 +28,50 @@ export function registerMeetHandlers(io, socket) {
     console.log(socket.data.username);
 
     socket.join(roomId);
-    socket.to(roomId).emit("new-user", socket.data.username);
+    socket.to(roomId).emit("new-user", socket.data.username, socket.id);
 
     return callback({ success: true });
   });
 
-  socket.on("check-room", async (roomId, callback) =>{
-
+  socket.on("check-room", async (roomId, callback) => {
     const existUser = socket.rooms.has(roomId);
 
     console.log(existUser);
 
-    if(!existUser){
-      return callback({success : false});
+    if (!existUser) {
+      return callback({ success: false });
     }
 
-    return callback({success : true});
-  })
+    return callback({ success: true });
+  });
+
+  socket.on("leave-room", (roomId) => {
+    socket.leave(roomId);
+
+    socket.to(roomId).emit("user-left", socket.data.username);
+  });
+
+  socket.on("offer", ({ offer, target, cameraEnabled }) => {
+    console.log("target socket id : ", target);
+
+    io.to(target).emit("offer", {
+      offer,
+      from: socket.id,
+      userCamera: cameraEnabled,
+      username: socket.data.username,
+    });
+  });
+
+  socket.on("answer", ({ answer, target, cameraEnabled }) => {
+    io.to(target).emit("answer", {
+      answer,
+      from: socket.id,
+      userCamera: cameraEnabled,
+      username: socket.data.username,
+    });
+  });
+
+  socket.on("ice-candidate", ({ candidate, target }) => {
+    io.to(target).emit("ice-candidate", { candidate, from: socket.id });
+  });
 }

@@ -73,14 +73,15 @@ const ParticipantsThumbnail = memo(function participantsThumbnainl({
   );
 });
 
-export function VideoGrid({ user, host }) {
+export function VideoGrid({ user, host,participants }) {
   const { cameraEnabled, stream } = useMedia();
   const [activeUserId, setActiveUserId] = useState(null);
 
-  const participants = [
-    { id: "abugadh", cameraEnabled: cameraEnabled, stream: stream },
-    { id: "laila", cameraEnabled: cameraEnabled, stream: stream },
-  ];
+  // const participants = [
+  //   {id : user.id, cameraEnabled : cameraEnabled, stream : stream},
+  //   { id: "abugadh", cameraEnabled: cameraEnabled, stream: stream },
+  //   { id: "laila", cameraEnabled: cameraEnabled, stream: stream },
+  // ];
 
   useEffect(() => {
     if (!activeUserId && (host?.id || user?.id)) {

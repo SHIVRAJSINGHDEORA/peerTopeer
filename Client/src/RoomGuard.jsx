@@ -13,18 +13,24 @@ export default function RoomGuard() {
   useEffect(() => {
     if (socket?.connected) {
       socket.emit("check-room", id, (res) => {
-        const {success} = res;
+        const { success } = res;
         console.log("joined room : ", success);
 
-        if(!success){
-           return navigate(`video-call/setup/${id}`);
+        if (!success) {
+          return setTimeout(() => {
+            navigate(`video-call/setup/${id}`);
+          }, 1000);
         }
-        
-        setCheck(true);
+
+        setTimeout(() => {
+          setCheck(true);
+        }, 1000);
       });
     } else {
       navigate("/home");
     }
+
+    return () => clearTimeout();
   }, []);
 
   if (!check) {

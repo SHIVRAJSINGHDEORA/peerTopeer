@@ -118,6 +118,8 @@ export function MediaProvider({ children }) {
         "devicechange",
         handleDeviceChange,
       );
+
+      stopMedia();
     };
   }, []);
 
