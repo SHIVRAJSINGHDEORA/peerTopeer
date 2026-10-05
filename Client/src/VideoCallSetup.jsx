@@ -56,19 +56,7 @@ export default function VideoCallSetup() {
 
   const joinCall = () => {
     if (socket?.connected) {
-      socket.emit("join-room", Id, (res)=>{
-        console.log(res);
-        const {success, message} = res;
-        
-        if(!success){
-          handleError(message);
-          navigate("/home");
-          return;
-        }
-        navigate(`/video-call/room/${Id}`);
-        
-      });
-      return;
+      return navigate(`/video-call/room/${Id}`);
     }
     navigate("/home");
   };

@@ -1,263 +1,204 @@
 import { useNavigate, useParams } from "react-router";
-import { CallControl } from "./components/CallControl";
 import { useEffect, useRef, useState } from "react";
-import info from "./assets/info2.svg";
-import Time from "./components/Time";
-import { VideoTile } from "./components/VideoTile";
 import axios from "axios";
+import { CallControl } from "./components/CallControl";
+import Time from "./components/Time";
+import { VideoGrid } from "./components/VideoGrid";
 import { showToast } from "./components/customToast";
 import { useMedia } from "./MediaContext";
-import { VideoGrid } from "./components/VideoGrid";
 import { useSocket } from "./SocketContext";
+import info from "./assets/info2.svg";
 
 export default function VideoCallRoom() {
-  const params = useParams();
-  const id = params.id;
-  const [meetData, setMeetData] = useState({ Id: "", user: "", host: "" });
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { stream, stopMedia, cameraEnabled } = useMedia();
-  const { Id, user, host } = meetData;
-  const {
-    socket,
-    newUser,
-    incomingOffer,
-    incomingAnswer,
-    incomingIceCandidate,
-  } = useSocket();
-  const peerConnection = useRef(null);
+  
+  const [meetData, setMeetData] = useState({ Id: "", user: "", host: "" });
   const [participants, setParticipants] = useState([]);
+  
+  const { stream, stopMedia, cameraEnabled } = useMedia();
+  const { socket } = useSocket();
+  const { Id, user, host } = meetData;
 
+  
+  const peerConnections = useRef(new Map());
+  const hasJoinedRoom = useRef(false);
+  
+  
+  const streamRef = useRef(stream);
+  const cameraRef = useRef(cameraEnabled);
+
+  useEffect(() => {
+    streamRef.current = stream;
+    cameraRef.current = cameraEnabled;
+  }, [stream, cameraEnabled]);
+
+  
   useEffect(() => {
     const getMeet = async () => {
       try {
-        const { data } = await axios.get(
-          `http://localhost:8080/video-call/${id}`,
-          { withCredentials: true },
-        );
-
-        console.log(data);
-        const { meetId, user, host } = data;
-        setMeetData((prev) => ({
-          ...prev,
-          Id: meetId,
-          user: user,
-          host: host,
-        }));
+        const { data } = await axios.get(`http://localhost:8080/video-call/${id}`, { 
+          withCredentials: true 
+        });
+        setMeetData({ Id: data.meetId, user: data.user, host: data.host });
       } catch (err) {
-        console.log(err.message);
-        handleError(err.response?.data?.message || "Something went wrong!");
+        showToast(err.response?.data?.message || "Something went wrong!", "error", "top-right");
         navigate("/home");
       }
     };
-
     getMeet();
+  }, [id, navigate]);
 
-    return () => {
-      socket?.emit("leave-room", id);
-    };
-  }, []);
-
+ 
   useEffect(() => {
-    if (!stream) return;
-
+    if (!socket || !user) return;
     setParticipants((prev) => {
-      const existing = prev.find((user) => user.socketId === socket?.id);
+      const filtered = prev.filter((p) => p.socketId !== socket.id);
+      return [{ socketId: socket.id, id: user, cameraEnabled, stream }, ...filtered];
+    });
+  }, [socket, user, cameraEnabled, stream]);
 
-      if (existing) {
-        return prev.map((u) =>
-          u.socketId === socket.id
-            ? {
-                ...u,
-                id: user,
-                cameraEnabled: cameraEnabled,
-                stream: stream,
-              }
-            : u,
-        );
+ 
+  useEffect(() => {
+    if (hasJoinedRoom.current && socket) {
+      socket.emit("camera-toggle", { roomId: id, cameraEnabled });
+    }
+  }, [cameraEnabled, socket, id]);
+
+  
+  useEffect(() => {
+    if (!stream || peerConnections.current.size === 0) return;
+    
+    const videoTrack = stream.getVideoTracks()[0];
+    const audioTrack = stream.getAudioTracks()[0];
+
+    peerConnections.current.forEach((pc) => {
+      const senders = pc.getSenders();
+      
+      const videoSender = senders.find(s => s.track?.kind === "video");
+      if (videoSender && videoTrack) videoSender.replaceTrack(videoTrack);
+      
+      const audioSender = senders.find(s => s.track?.kind === "audio");
+      if (audioSender && audioTrack) audioSender.replaceTrack(audioTrack);
+    });
+  }, [stream]); 
+
+  
+  useEffect(() => {
+    
+    if (!socket || !user || !stream) return; 
+
+    const createPeerConnection = (targetSocketId, targetUsername, isTargetCameraEnabled) => {
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      });
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit("ice-candidate", { candidate: event.candidate, target: targetSocketId });
+        }
+      };
+
+      pc.ontrack = (event) => {
+        setParticipants((prev) => {
+          const remoteStream = event.streams[0];
+          const existing = prev.find((p) => p.socketId === targetSocketId);
+          if (existing) {
+            return prev.map((p) =>
+              p.socketId === targetSocketId ? { ...p, stream: remoteStream } : p
+            );
+          }
+          return [
+            ...prev,
+            { socketId: targetSocketId, id: targetUsername, cameraEnabled: isTargetCameraEnabled, stream: remoteStream },
+          ];
+        });
+      };
+
+     
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => pc.addTrack(track, streamRef.current));
       }
 
-      return [
-        {
-          socketId: socket.id,
-          id: user,
-          cameraEnabled: cameraEnabled,
-          stream: stream,
-        },
-        ...prev,
-      ];
-    });
-  }, [stream, socket, user, cameraEnabled]);
-
-  useEffect(() => {
-    if (!socket) return;
-    if (!newUser) return;
-
-    const handleUser = async (username, socketId) => {
-      const configuration = {
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      };
-
-      peerConnection.current = new RTCPeerConnection(configuration);
-
-      peerConnection.current.ontrack = (event) => {
-        const remoteStream = event.streams[0];
-
-        setParticipants((prev) => {
-          const existing = prev.find((user) => user.socketId === socketId);
-
-          if (existing) {
-            return prev.map((user) =>
-              user.socketId === socketId
-                ? { ...user, stream: remoteStream }
-                : user,
-            );
-          }
-
-          return [
-            ...prev,
-            {
-              socketId : socketId,
-              id : username,
-              cameraEnabled: false,
-              stream: remoteStream,
-            },
-          ];
-        });
-      };
-
-      peerConnection.current.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit("ice-candidate", {
-            candidate: event.candidate,
-            target: socketId,
-          });
-        }
-      };
-
-      stream.getTracks().forEach((track) => {
-        peerConnection.current.addTrack(track, stream);
-      });
-
-      const offer = await peerConnection.current.createOffer();
-      await peerConnection.current.setLocalDescription(offer);
-
-      socket.emit("offer", { offer, target: socketId, cameraEnabled });
+      peerConnections.current.set(targetSocketId, pc);
+      return pc;
     };
 
-    handleUser(newUser);
-  }, [socket, newUser]);
-
-  useEffect(() => {
-    if (!socket) return;
-    if (!incomingOffer) return;
+    
+    const handleNewUser = async ({ username, socketId }) => {
+      const pc = createPeerConnection(socketId, username, false);
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      
+      socket.emit("offer", { offer, target: socketId, cameraEnabled: cameraRef.current }); 
+    };
 
     const handleOffer = async ({ offer, from, userCamera, username }) => {
-      console.log("from socket Id :", from);
-
-      const confugration = {
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      };
-
-      peerConnection.current = new RTCPeerConnection(confugration);
-
-      peerConnection.current.ontrack = (event) => {
-        const remoteStream = event.streams[0];
-
-        setParticipants((prev) => {
-          const existing = prev.find((user) => user.socketId === from);
-
-          if (existing) {
-            return prev.map((user) =>
-              user.socketId === from ? { ...user, stream: remoteStream } : user,
-            );
-          }
-
-          return [
-            ...prev,
-            {
-              socketId: from,
-              id : username,
-              cameraEnabled: userCamera,
-              stream: remoteStream,
-            },
-          ];
-        });
-      };
-
-      peerConnection.current.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit("ice-candidate", {
-            candidate: event.candidate,
-            target: from,
-          });
-        }
-      };
-
-      stream.getTracks().forEach((track) => {
-        peerConnection.current.addTrack(track, stream);
-      });
-
-      await peerConnection.current.setRemoteDescription(offer);
-      const answer = await peerConnection.current.createAnswer();
-      await peerConnection.current.setLocalDescription(answer);
-
-      socket.emit("answer", { answer, target: from, cameraEnabled });
+      const pc = createPeerConnection(from, username, userCamera);
+      await pc.setRemoteDescription(offer);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit("answer", { answer, target: from, cameraEnabled: cameraRef.current });
     };
 
-    handleOffer(incomingOffer);
-  }, [socket, incomingOffer]);
-
-  useEffect(() => {
-    if (!socket) return;
-    if (!incomingAnswer) return;
-
-    const handleAnswer = async ({ answer, from, userCamera, username }) => {
-      await peerConnection.current.setRemoteDescription(answer);
-
-      setParticipants((prev) => {
-        const existing = prev.find((user) => user.socketId === from);
-
-        if (existing) {
-          return prev.map((user) =>
-            user.socketId === from
-              ? {
-                  ...user,
-                  id : username,
-                  cameraEnabled: userCamera,
-                }
-              : user,
-          );
-        }
-
-        return [
-          ...prev,
-          {
-            socketId: from,
-            id : username,
-            cameraEnabled: userCamera,
-            stream: null,
-          },
-        ];
-      });
+    const handleAnswer = async ({ answer, from }) => {
+      const pc = peerConnections.current.get(from);
+      if (pc) await pc.setRemoteDescription(answer);
     };
-
-    handleAnswer(incomingAnswer);
-  }, [socket, incomingAnswer]);
-
-  useEffect(() => {
-    if (!socket) return;
-    if (!incomingIceCandidate) return;
 
     const handleIceCandidate = async ({ candidate, from }) => {
-      await peerConnection.current.addIceCandidate(candidate);
+      const pc = peerConnections.current.get(from);
+      if (pc) await pc.addIceCandidate(candidate);
     };
 
-    handleIceCandidate(incomingIceCandidate);
-  }, [socket, incomingIceCandidate]);
+    const handleCameraToggle = ({ socketId, isCameraEnabled }) => {
+      setParticipants((prev) => 
+        prev.map((p) => (p.socketId === socketId ? { ...p, cameraEnabled: isCameraEnabled } : p))
+      );
+    };
 
-  const handleError = (err) => {
-    showToast(err, "error", "top-right");
-  };
+    const handleUserLeft = (socketId) => {
+      const pc = peerConnections.current.get(socketId);
+      if (pc) {
+        pc.close();
+        peerConnections.current.delete(socketId);
+      }
+      setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
+    };
+
+   
+    socket.on("new-user", handleNewUser);
+    socket.on("offer", handleOffer);
+    socket.on("answer", handleAnswer);
+    socket.on("ice-candidate", handleIceCandidate);
+    socket.on("camera-toggle", handleCameraToggle);
+    socket.on("user-disconnected", handleUserLeft);
+
+    
+    if (!hasJoinedRoom.current) {
+      socket.emit("join-room", id, () => {
+        hasJoinedRoom.current = true;
+      });
+    }
+
+     
+    return () => {
+      if (hasJoinedRoom.current) {
+        socket.emit("leave-room", id);
+      }
+      
+      peerConnections.current.forEach((pc) => pc.close());
+      peerConnections.current.clear();
+      hasJoinedRoom.current = false;
+
+      socket.off("new-user", handleNewUser);
+      socket.off("offer", handleOffer);
+      socket.off("answer", handleAnswer);
+      socket.off("ice-candidate", handleIceCandidate);
+      socket.off("camera-toggle", handleCameraToggle);
+      socket.off("user-disconnected", handleUserLeft);
+    };
+  }, [socket, user, id]); 
 
   const endCall = () => {
     stopMedia();
@@ -265,23 +206,15 @@ export default function VideoCallRoom() {
   };
 
   return (
-    <div className="h-screen w-full lg:overflow-hidden p-3 pb-0 sm:p-4">
+    <div className="h-screen w-full p-3 pb-0 sm:p-4 lg:overflow-hidden">
       <div className="flex h-full flex-col items-around justify-between gap-2">
         <div className="flex items-center gap-4">
-          <div className="h-full w-auto">
-            <img className="h-8 w-8" src={info} alt="" />
-          </div>
-          <div className="text-white font-bold">{Id}</div>
-          <div>
-            <span> | </span>
-          </div>
+          <img className="h-8 w-8" src={info} alt="Info" />
+          <div className="font-bold text-white">{Id}</div>
+          <span className="text-white"> | </span>
           <Time />
         </div>
-        <VideoGrid
-          user={{ id: user }}
-          host={{ id: host }}
-          participants={participants}
-        />
+        <VideoGrid user={{ id: user }} host={{ id: host }} participants={participants} />
         <div className="shrink-0 pb-3 sm:pb-0">
           <CallControl onJoin={endCall} onEnd={endCall} />
         </div>

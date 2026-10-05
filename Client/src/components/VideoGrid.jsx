@@ -74,14 +74,7 @@ const ParticipantsThumbnail = memo(function participantsThumbnainl({
 });
 
 export function VideoGrid({ user, host,participants }) {
-  const { cameraEnabled, stream } = useMedia();
   const [activeUserId, setActiveUserId] = useState(null);
-
-  // const participants = [
-  //   {id : user.id, cameraEnabled : cameraEnabled, stream : stream},
-  //   { id: "abugadh", cameraEnabled: cameraEnabled, stream: stream },
-  //   { id: "laila", cameraEnabled: cameraEnabled, stream: stream },
-  // ];
 
   useEffect(() => {
     if (!activeUserId && (host?.id || user?.id)) {
@@ -113,11 +106,11 @@ export function VideoGrid({ user, host,participants }) {
           {participants.map((participant, index) => (
             <div
               key={index}
-              className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl ${participant.id == activeUserId ? "border-2 border-yellow-500/60" : ""} bg-zinc-950 p-1 sm:h-24 sm:w-24 lg:h-28 lg:w-full lg:p-2`}
+              className={`relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl ${participant.id == activeUser.id ? "border-2 border-yellow-500/60" : ""} bg-zinc-950 p-1 sm:h-24 sm:w-24 lg:h-28 lg:w-full lg:p-2`}
             >
               <ParticipantsThumbnail
                 participant={participant}
-                isActive={participant.id == activeUserId}
+                isActive={participant.id == activeUser.id}
                 onSelect={handleSelect}
               />
             </div>

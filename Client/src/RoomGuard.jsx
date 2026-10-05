@@ -4,42 +4,38 @@ import { Spinner } from "./components/ui/spinner";
 import { useSocket } from "./SocketContext";
 
 export default function RoomGuard() {
-  const [check, setCheck] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const navigate = useNavigate();
-  const params = useParams();
-  const id = params.id;
-  const { socket } = useSocket();
+  const { id } = useParams();
+  const { socket, status } = useSocket();
 
   useEffect(() => {
-    if (socket?.connected) {
-      socket.emit("check-room", id, (res) => {
-        const { success } = res;
-        console.log("joined room : ", success);
-
-        if (!success) {
-          return setTimeout(() => {
-            navigate(`video-call/setup/${id}`);
-          }, 1000);
-        }
-
-        setTimeout(() => {
-          setCheck(true);
-        }, 1000);
-      });
-    } else {
+    
+    if (status === "connecting" || !socket) return;
+    
+    if (status === "Failed") {
       navigate("/home");
+      return;
     }
 
-    return () => clearTimeout();
-  }, []);
+   
+    socket.emit("check-room", id, (res) => {
+      if (!res.success) {
+        
+        navigate(`/video-call/setup/${id}`, { replace: true });
+      } else {
+        setIsAuthorized(true);
+      }
+    });
+  }, [socket, status, id, navigate]);
 
-  if (!check) {
+  if (!isAuthorized) {
     return (
-      <div className="min-h-screen w-full flex justify-center items-center">
+      <div className="flex min-h-screen w-full items-center justify-center">
         <Spinner className="size-8" />
       </div>
     );
   }
 
-  return <Outlet />;
+  return <Outlet />; 
 }

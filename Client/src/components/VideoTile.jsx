@@ -27,7 +27,7 @@ export function VideoTile({
     };
   }, [stream, cameraEnabled]);
 
-  // Derived display flags
+  
   const isConnecting = cameraEnabled && !stream;
   const isCameraOff = !cameraEnabled;
   const isLive = cameraEnabled && !!stream;
@@ -36,7 +36,7 @@ export function VideoTile({
     <div className="flex h-full w-full items-center justify-center p-2">
       <div className="relative aspect-video  max-h-full w-full max-w-3xl overflow-hidden rounded-3xl border-8 border-zinc-800 bg-zinc-900 shadow-2xl">
         
-        {/* 1. Hardware Video Element */}
+        
         <video
           ref={videoRef}
           autoPlay
@@ -48,7 +48,7 @@ export function VideoTile({
           }`}
         />
 
-        {/* 2. Connecting State (Camera is ON, but stream track is still null) */}
+       
         {isConnecting && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl bg-zinc-900 text-zinc-400">
             <div className="h-10 w-10 animate-spin rounded-full border-2 border-zinc-700 border-t-blue-500" />
@@ -58,7 +58,7 @@ export function VideoTile({
           </div>
         )}
 
-        {/* 3. Camera Off State */}
+        
         {isCameraOff && (
           <div className="absolute inset-0 flex h-full w-full items-center justify-center rounded-2xl bg-zinc-900 p-4">
             <img
@@ -69,7 +69,7 @@ export function VideoTile({
           </div>
         )}
 
-        {/* Participant Name Badge */}
+        
         {name && (
           <span className="absolute bottom-4 left-4 z-10 rounded-md bg-black/60 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
             {name} {isLocal && "(You)"}
