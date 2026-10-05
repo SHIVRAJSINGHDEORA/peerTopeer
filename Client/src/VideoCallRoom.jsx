@@ -141,9 +141,15 @@ export default function VideoCallRoom() {
       socket.emit("answer", { answer, target: from, cameraEnabled: cameraRef.current });
     };
 
-    const handleAnswer = async ({ answer, from }) => {
+    const handleAnswer = async ({ answer, from,userCamera }) => {
       const pc = peerConnections.current.get(from);
-      if (pc) await pc.setRemoteDescription(answer);
+      if (pc) {
+        await pc.setRemoteDescription(answer);
+
+        setParticipants((prev)=>{
+          return prev.map((p)=> p.socketId == from ? {...p, cameraEnabled : userCamera} : p)
+        })
+      }
     };
 
     const handleIceCandidate = async ({ candidate, from }) => {
