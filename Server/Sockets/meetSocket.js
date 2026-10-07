@@ -1,4 +1,6 @@
 import { verifyMeet } from "./Services/meetServices.js";
+import {User} from "../Models/UserModel.js"
+import { Meet } from "../Models/meetModel.js";
 
 export function registerMeetHandlers(io, socket) {
  
@@ -24,6 +26,13 @@ export function registerMeetHandlers(io, socket) {
     const meet = await verifyMeet(roomId);
     if (!meet) return callback({ success: false, message: "Room doesn't exist!" });
 
+    const host = await User.findOne({_id : meet.host});
+
+    const isAdmin = host.username == socket.data.username;
+
+    socket.data.isAdmin = isAdmin;
+    socket.data.roomId = roomId;
+
     socket.join(roomId);
     console.log("Joined room:", socket.data.username);
 
@@ -43,9 +52,23 @@ export function registerMeetHandlers(io, socket) {
 
  
   socket.on("disconnecting", () => {
-    socket.rooms.forEach((roomId) => {
+
+    socket.rooms.forEach(async (roomId) => {
       if (roomId !== socket.id) {
         socket.to(roomId).emit("user-disconnected", socket.id);
+
+        if(socket.data.isAdmin){
+          console.log(`Admin disconnected. Deleting meet ${roomId} from DB...`);
+
+          try{
+            await Meet.deleteOne({meetId : roomId});
+            socket.to(roomId).emit("meeting-ended", "The host has ended the meeting.");
+            io.in(roomId).socketsLeave(roomId);
+          }catch(err){
+            console.log("Error ocuured in deleting meet",err);
+
+          }
+        }
       }
     });
   });

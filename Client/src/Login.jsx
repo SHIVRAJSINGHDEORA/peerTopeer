@@ -15,6 +15,7 @@ export default function Login() {
   const { email, password } = inputValue;
   const navigate = useNavigate();
   const {setIsAuthenticated} = useAuth();
+  const API_URL = import.meta.env.VITE_SERVER_URL;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +29,7 @@ export default function Login() {
 
     try {
       const { data } = await axios.post(
-        "http://localhost:8080/login",
+        `${API_URL}/login`,
         { ...inputValue },
         {
           withCredentials: true,

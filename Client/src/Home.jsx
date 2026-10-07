@@ -14,6 +14,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("null");
   const [joinId, setJoinId] = useState("");
+  const API_URL = import.meta.env.VITE_SERVER_URL;
 
 
   const handleChange = (e) => {
@@ -32,7 +33,7 @@ export default function Home() {
   const handleCreateMeet = async () => {
     try {
       const { data } = await axios.post(
-        "http://localhost:8080/video-call/meetings",
+        `${API_URL}/video-call/meetings`,
         {},
         { withCredentials: true },
       );
@@ -52,7 +53,7 @@ export default function Home() {
   const handleJoinMeet = async () => {
     try {
       const { data } = await axios.get(
-        `http://localhost:8080/video-call/${joinId}`,
+        `${API_URL}/video-call/${joinId}`,
         {
           withCredentials: true,
         },

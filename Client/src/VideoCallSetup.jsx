@@ -21,6 +21,7 @@ export default function VideoCallSetup() {
   } = useMedia();
   const { Id, user, host } = meetData;
   const { socket } = useSocket();
+  const API_URL = import.meta.env.VITE_SERVER_URL;
 
   console.log(socket.connected);
 
@@ -28,7 +29,7 @@ export default function VideoCallSetup() {
     const getMeet = async () => {
       try {
         const { data } = await axios.get(
-          `http://localhost:8080/video-call/${id}`,
+          `${API_URL}/video-call/${id}`,
           { withCredentials: true },
         );
 

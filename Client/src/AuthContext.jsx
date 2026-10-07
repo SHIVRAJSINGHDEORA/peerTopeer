@@ -6,12 +6,13 @@ export const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const API_URL = import.meta.env.VITE_SERVER_URL;
 
   useEffect(() => {
     const verifyUser = async () => {
       try {
         const { data } = await axios.post(
-          "http://localhost:8080/",
+          `${API_URL}/`,
           {},
           { withCredentials: true },
         );

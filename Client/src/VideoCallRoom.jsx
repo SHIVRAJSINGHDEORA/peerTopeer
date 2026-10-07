@@ -12,7 +12,8 @@ import info from "./assets/info2.svg";
 export default function VideoCallRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+  const API_URL = import.meta.env.VITE_SERVER_URL;
+
   const [meetData, setMeetData] = useState({ Id: "", user: "", host: "" });
   const [participants, setParticipants] = useState([]);
   
@@ -37,7 +38,7 @@ export default function VideoCallRoom() {
   useEffect(() => {
     const getMeet = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:8080/video-call/${id}`, { 
+        const { data } = await axios.get(`${API_URL}/video-call/${id}`, { 
           withCredentials: true 
         });
         setMeetData({ Id: data.meetId, user: data.user, host: data.host });
@@ -172,6 +173,11 @@ export default function VideoCallRoom() {
       setParticipants((prev) => prev.filter((p) => p.socketId !== socketId));
     };
 
+    const handleMeetingEnded = (reason) => {
+      showToast(reason, "success",'top-center');
+      stopMedia();
+      navigate("/");
+    };
    
     socket.on("new-user", handleNewUser);
     socket.on("offer", handleOffer);
@@ -179,6 +185,7 @@ export default function VideoCallRoom() {
     socket.on("ice-candidate", handleIceCandidate);
     socket.on("camera-toggle", handleCameraToggle);
     socket.on("user-disconnected", handleUserLeft);
+    socket.on("meeting-ended", handleMeetingEnded);
 
     
     if (!hasJoinedRoom.current) {
@@ -203,6 +210,7 @@ export default function VideoCallRoom() {
       socket.off("ice-candidate", handleIceCandidate);
       socket.off("camera-toggle", handleCameraToggle);
       socket.off("user-disconnected", handleUserLeft);
+      socket.off("meeting-ended", handleMeetingEnded);
     };
   }, [socket, user, id]); 
 

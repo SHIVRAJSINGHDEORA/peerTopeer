@@ -10,9 +10,11 @@ import cookieParser from "cookie-parser";
 const app = express();
 const httpServer = createServer(app);
 
+const frontend_url = process.env.FRONTEND_URL;
+
 const io = new Server(httpServer,{cors : {
   credentials : true,
-  origin : ["http://localhost:5173", "https://hoppscotch.io/"]
+  origin : [`${frontend_url}`]
 }});
 
 ragisterSocketHandlers(io);
@@ -40,7 +42,7 @@ app.use(cookieParser());
 
 
 app.use(cors({
-  origin : ['http://localhost:5173'],
+  origin : [`${frontend_url}`],
   methods : ['GET', 'POST'],
   credentials : true,
 }));

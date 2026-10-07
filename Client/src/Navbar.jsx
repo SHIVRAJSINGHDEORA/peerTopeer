@@ -12,6 +12,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const path = location.pathname.toLowerCase();
   const { setIsAuthenticated } = useAuth();
+  const API_URL = import.meta.env.VITE_SERVER_URL;
 
   const hideNavbar =
     path === "/login" || path === "/signup" || path.startsWith("/video-call");
@@ -23,7 +24,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       const { data } = await axios.post(
-        "http://localhost:8080/logout",
+        `${API_URL}/logout`,
         {},
         { withCredentials: true },
       );

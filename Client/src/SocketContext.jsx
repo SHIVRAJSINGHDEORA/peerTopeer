@@ -6,9 +6,10 @@ export const SocketContext = createContext();
 export function SocketProvider({ children }) {
   const [socket, setSocket] = useState(null);
   const [status, setStatus] = useState("connecting"); // "connecting" | "connected" | "Failed"
+  const API_URL = import.meta.env.VITE_SERVER_URL;
 
   useEffect(() => {
-    const newSocket = io("http://localhost:8080", { withCredentials: true });
+    const newSocket = io(`${API_URL}`, { withCredentials: true });
 
     newSocket.on("connect", () => {
       setSocket(newSocket);
