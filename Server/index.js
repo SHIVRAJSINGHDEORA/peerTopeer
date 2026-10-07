@@ -6,6 +6,9 @@ import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import dns from "dns";
+
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 const app = express();
 const httpServer = createServer(app);
