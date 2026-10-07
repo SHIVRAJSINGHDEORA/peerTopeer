@@ -3,11 +3,10 @@ import { Field } from "./components/ui/field";
 import { Input } from "./components/ui/input";
 import { useNavigate } from "react-router";
 import meetlogo from "./assets/google-meet.svg";
+import fileShareIlus from "./assets/fileShareIlus.svg";
 import pluslogo from "./assets/plus.svg";
 import meetIlus from "./assets/meetingilustrator.svg";
 import { useState, startTransition, useEffect } from "react";
-import { Spotify } from "./components/Spotify";
-import { useAuth } from "./AuthContext";
 import axios from "axios";
 import { showToast } from "./components/customToast";
 
@@ -15,14 +14,7 @@ export default function Home() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("null");
   const [joinId, setJoinId] = useState("");
-  const { isAuthenticated } = useAuth();
 
-  const handleClick = (e) => {
-    const page = e.target.name;
-    console.log(page);
-
-    navigate(`/${page}`);
-  };
 
   const handleChange = (e) => {
     setJoinId(e.target.value);
@@ -59,9 +51,12 @@ export default function Home() {
 
   const handleJoinMeet = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:8080/video-call/${joinId}`, {
-        withCredentials: true,
-      });
+      const { data } = await axios.get(
+        `http://localhost:8080/video-call/${joinId}`,
+        {
+          withCredentials: true,
+        },
+      );
 
       console.log(data);
       const { meetId } = data;
@@ -152,7 +147,6 @@ export default function Home() {
                           <Button onClick={handleCreateMeet}>
                             Generate New ID
                           </Button>
-                          <Button>Use Personal ID</Button>
                         </div>
                       </div>
                     )}
@@ -161,14 +155,45 @@ export default function Home() {
               </div>
             </div>
             <div className="flex-1 p-4 flex justify-center items-center">
-              {/* <iframe
-                data-testid="embed-iframe"
-                src="https://open.spotify.com/embed/playlist/2oao4jid9qgiKd0f7upIUj?utm_source=generator&si=308c609b77c34f8e"
-                width="100%"
-                height="352"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy"
-              ></iframe> */}
+              <div className="flex flex-col items-center justify-center gap-4 sm:gap-6 relative order-1 lg:order-2 h-full max-h-[25vh] sm:max-h-[35vh] lg:max-h-full min-h-0 w-full">
+                <img
+                  className="w-full flex-1 min-h-0 object-contain opacity-80"
+                  src={fileShareIlus}
+                  alt="Illustration"
+                />
+
+                <div className="shrink-0 flex items-start sm:items-center gap-3 sm:gap-4 bg-zinc-900 border border-zinc-800 rounded-xl p-3 sm:p-4 w-full max-w-sm">
+                  <div className="p-2 sm:p-3 bg-zinc-800 rounded-lg flex items-center justify-center shrink-0">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+
+                  <div className="flex flex-col text-left justify-center">
+                    <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                      <span className="text-sm font-bold text-white leading-none">
+                        File Sharing
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded text-black bg-white text-[9px] font-extrabold uppercase tracking-widest leading-none">
+                        Soon
+                      </span>
+                    </div>
+                    <span className="text-[11px] sm:text-xs text-zinc-400 leading-tight">
+                      Share documents and images securely during your meetings.
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

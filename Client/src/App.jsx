@@ -12,6 +12,10 @@ import { VideoCallLayout } from "./VideoCallLayout";
 import VideoCallRoom from "./VideoCallRoom";
 import VideoCallSocketLayout from "./VideoCallSocketLayout";
 import RoomGuard from "./RoomGuard";
+import LandingPage from "./pages/LandingPage";
+import PricingPage from "./pages/PricingPage";
+import AboutPage from "./pages/AboutPage";
+import SupportPage from "./pages/SupportPage";
 
 function App() {
   return (
@@ -23,6 +27,10 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/support" element={<SupportPage />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/home" element={<Home />} />
               <Route element={<VideoCallSocketLayout />}>

@@ -11,7 +11,7 @@ export default function Navbar() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const path = location.pathname.toLowerCase();
-  const {setIsAuthenticated} = useAuth();
+  const { setIsAuthenticated } = useAuth();
 
   const hideNavbar =
     path === "/login" || path === "/signup" || path.startsWith("/video-call");
@@ -61,6 +61,10 @@ export default function Navbar() {
     }
   };
 
+  const handleNav = (e) => {
+    navigate(`/${e.target.id}`);
+  };
+
   return (
     <>
       <div className="fixed top-0 z-50 flex w-full items-center gap-8 bg-background p-5 shadow-md shadow-primary/30">
@@ -73,21 +77,29 @@ export default function Navbar() {
           <Button variant="ghost" size="lg" onClick={handleHome}>
             Home
           </Button>
-          <Button variant="ghost" size="lg">
+          <Button id="pricing" variant="ghost" size="lg" onClick={handleNav}>
             Pricing
           </Button>
-          <Button variant="ghost" size="lg">
+          <Button id="about" variant="ghost" size="lg" onClick={handleNav}>
             About
           </Button>
-          <Button variant="ghost" size="lg">
+          <Button id="support" variant="ghost" size="lg" onClick={handleNav}>
             Support
           </Button>
         </div>
-        <div className="w-full">
-          <Field orientation="horizontal">
-            <Input type="search" placeholder="Search..." />
-            <Button>Search</Button>
-          </Field>
+        <div className="w-full flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+            </span>
+            <span className="text-sm font-semibold text-white">
+              System Status
+            </span>
+          </div>
+          <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">
+            All Operational
+          </span>
         </div>
         <div className="ml-auto flex gap-4">
           {!isAuthenticated ? (
