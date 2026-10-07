@@ -37,6 +37,7 @@ export function SignupForm({ inputValue, setInputValue,isLoading,handleSubmit, .
   const [confirmPass, setConfirmPass] = useState("");
   const [passMatch, setPassMatch] = useState(null);
   const { email, username, password } = inputValue;
+   const API_URL = import.meta.env.VITE_SERVER_URL;
 
   useEffect(() => {
     if (!username) {
@@ -47,7 +48,7 @@ export function SignupForm({ inputValue, setInputValue,isLoading,handleSubmit, .
     const timer = setTimeout(async () => {
       try {
         const { data } = await axios.get(
-          "http://localhost:8080/check-username",
+          `${API_URL}/check-username`,
           { params: { username } },
           { withCredentials: true },
         );
