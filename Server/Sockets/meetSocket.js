@@ -1,34 +1,53 @@
 import { verifyMeet } from "./Services/meetServices.js";
-import {User} from "../Models/UserModel.js"
+import { User } from "../Models/UserModel.js";
 import { Meet } from "../Models/meetModel.js";
 
 export function registerMeetHandlers(io, socket) {
- 
   socket.on("check-room", async (roomId, callback) => {
     const meet = await verifyMeet(roomId);
     if (!meet) {
       return callback({ success: false, message: "Room doesn't exist!" });
     }
 
-    
     const sockets = await io.in(roomId).fetchSockets();
-    const userExist = sockets.find((s) => s.data.username === socket.data.username);
+    const userExist = sockets.find(
+      (s) => s.data.username === socket.data.username,
+    );
 
     if (userExist) {
-      return callback({ success: false, message: "User already in room in another tab!" });
+      return callback({
+        success: false,
+        message: "User already in room in another tab!",
+      });
     }
 
     return callback({ success: true });
   });
 
-  
   socket.on("join-room", async (roomId, callback) => {
     const meet = await verifyMeet(roomId);
-    if (!meet) return callback({ success: false, message: "Room doesn't exist!" });
+    if (!meet)
+      return callback({ success: false, message: "Room doesn't exist!" });
 
-    const host = await User.findOne({_id : meet.host});
+    socket.rooms.forEach((room) => {
+      if (room !== socket.id) socket.leave(room);
+    });
 
-    const isAdmin = host.username == socket.data.username;
+    const sockets = await io.in(roomId).fetchSockets();
+    const userAlreadyInRoom = sockets.find(
+      (s) => s.data.username === socket.data.username,
+    );
+
+    if (userAlreadyInRoom) {
+      return callback({
+        success: false,
+        message: "User already in room in another tab!",
+      });
+    }
+
+    const host = await User.findOne({ _id: meet.host });
+
+    const isAdmin = host ? host.username == socket.data.username : false;
 
     socket.data.isAdmin = isAdmin;
     socket.data.roomId = roomId;
@@ -44,36 +63,33 @@ export function registerMeetHandlers(io, socket) {
     if (callback) callback({ success: true });
   });
 
-  
   socket.on("leave-room", (roomId) => {
     socket.leave(roomId);
     socket.to(roomId).emit("user-disconnected", socket.id);
   });
 
- 
-  socket.on("disconnecting", () => {
+ socket.on("disconnecting", async () => {
 
-    socket.rooms.forEach(async (roomId) => {
+    for (const roomId of socket.rooms) {
       if (roomId !== socket.id) {
         socket.to(roomId).emit("user-disconnected", socket.id);
 
-        if(socket.data.isAdmin){
+        if (socket.data.isAdmin) {
           console.log(`Admin disconnected. Deleting meet ${roomId} from DB...`);
 
-          try{
-            await Meet.deleteOne({meetId : roomId});
+          try {
+            await Meet.deleteOne({ meetId: roomId });
             socket.to(roomId).emit("meeting-ended", "The host has ended the meeting.");
             io.in(roomId).socketsLeave(roomId);
-          }catch(err){
-            console.log("Error ocuured in deleting meet",err);
-
+          } catch (err) {
+            console.log("Error occurred in deleting meet", err);
           }
         }
       }
-    });
+    }
   });
 
-  
+
   socket.on("camera-toggle", ({ roomId, cameraEnabled }) => {
     socket.to(roomId).emit("camera-toggle", {
       socketId: socket.id,
@@ -81,7 +97,6 @@ export function registerMeetHandlers(io, socket) {
     });
   });
 
-  
   socket.on("offer", ({ offer, target, cameraEnabled }) => {
     io.to(target).emit("offer", {
       offer,
